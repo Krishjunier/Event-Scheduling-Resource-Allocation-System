@@ -1,7 +1,7 @@
 ## Dashboard
 [![Watch the Demo Video](Dashboard.png)](Gokul%20Krishnan%20YN%20%20Event-Scheduling-Resource-Allocation-System.mp4)
 
-If the video doesn't play, [download it here](Gokul Krishnan YN Event-Scheduling-Resource-Allocation-System.mp4).
+If the video doesn't play, [download it here](https://github.com/Krishjunier/Event-Scheduling-Resource-Allocation-System/blob/main/Gokul%20Krishnan%20YN%20Event-Scheduling-Resource-Allocation-System.mp4).
 
 ## Feature Previews
 | **Resource Management** | **Event Management** |
@@ -67,7 +67,7 @@ Existing.start_time < New.end_time AND Existing.end_time > New.start_time
 This ensures that no two events using the same resource can overlap in time.
 
 ## Contact
-Submitted by: Gokul Krishnan Y N
+Submitted by: [Emuna D]
 
 ## Test Cases Covered
 
