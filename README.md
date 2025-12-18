@@ -1,7 +1,7 @@
 ## Dashboard
 [![Watch the Demo Video](Dashboard.png)](Gokul%20Krishnan%20YN%20%20Event-Scheduling-Resource-Allocation-System.mp4)
 
-If the video doesn't play, [download it here](Gokul%20Krishnan%20YN%20%20Event-Scheduling-Resource-Allocation-System.mp4).
+If the video doesn't play, [download it here](Gokul Krishnan YN Event-Scheduling-Resource-Allocation-System.mp4).
 
 ## Feature Previews
 | **Resource Management** | **Event Management** |
