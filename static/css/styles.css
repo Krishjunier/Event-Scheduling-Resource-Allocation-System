@@ -1,0 +1,412 @@
+:root {
+    --primary-color: #00f0ff;
+    --primary-glow: rgba(0, 240, 255, 0.6);
+    --secondary-color: #bd00ff;
+    /* Brighter purple */
+    --secondary-glow: rgba(189, 0, 255, 0.6);
+    --accent-color: #00bcff;
+    --success-color: #00ff9d;
+    /* Neon Green */
+    --warning-color: #ffeb3b;
+    /* Neon Yellow */
+    --background-color: #020204;
+    --sidebar-bg: #050508;
+    --card-bg: rgba(20, 25, 40, 0.7);
+    /* Slightly more transparent but brighter border */
+    --text-primary: #ffffff;
+    --text-secondary: #cbd5e1;
+    /* Much lighter grey */
+    --border-color: rgba(0, 240, 255, 0.3);
+    --glass-border: 1px solid rgba(0, 240, 255, 0.2);
+    --border-radius: 4px;
+    --box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+    --font-heading: 'Orbitron', sans-serif;
+    --font-body: 'Rajdhani', sans-serif;
+
+    /* Bootstrap Overrides */
+    --bs-body-bg: var(--background-color);
+    --bs-body-color: var(--text-primary);
+    --bs-primary: var(--primary-color);
+    --bs-secondary: var(--secondary-color);
+    --bs-success: var(--success-color);
+    --bs-warning: var(--warning-color);
+    --bs-primary-rgb: 0, 240, 255;
+    --bs-success-rgb: 0, 255, 157;
+}
+
+/* Force Text Colors */
+.text-muted {
+    color: var(--text-secondary) !important;
+}
+
+.text-primary {
+    color: var(--primary-color) !important;
+    text-shadow: 0 0 5px var(--primary-glow);
+}
+
+.text-success {
+    color: var(--success-color) !important;
+    text-shadow: 0 0 5px rgba(0, 255, 157, 0.5);
+}
+
+.text-warning {
+    color: var(--warning-color) !important;
+    text-shadow: 0 0 5px rgba(255, 235, 59, 0.5);
+}
+
+.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+
+.bg-success {
+    background-color: var(--success-color) !important;
+}
+
+/* Fix bg-opacity for neon effect */
+.bg-opacity-10 {
+    opacity: 1 !important;
+    background-color: rgba(0, 240, 255, 0.1) !important;
+    /* Hardcoded primary tint for now, or careful override */
+}
+
+/* Specific fix for the circle icon backgrounds to use the correct color tint */
+.text-primary+.bg-primary.bg-opacity-10,
+.bg-primary.bg-opacity-10 {
+    background-color: rgba(0, 240, 255, 0.15) !important;
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+}
+
+.text-success+.bg-success.bg-opacity-10,
+.bg-success.bg-opacity-10 {
+    background-color: rgba(0, 255, 157, 0.15) !important;
+    box-shadow: 0 0 10px rgba(0, 255, 157, 0.2);
+}
+
+/* Link Visibility */
+a {
+    color: var(--primary-color);
+    transition: all 0.3s;
+}
+
+a:hover {
+    color: #fff;
+    text-shadow: 0 0 8px var(--primary-glow);
+}
+
+body {
+    font-family: var(--font-body);
+    background-color: var(--background-color);
+    background-image:
+        radial-gradient(circle at 10% 20%, rgba(112, 0, 255, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(0, 240, 255, 0.05) 0%, transparent 40%),
+        linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 50px 50px, 50px 50px;
+    color: var(--text-primary);
+    overflow-x: hidden;
+    font-size: 1.2rem;
+    /* Increased for better readability */
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--font-heading);
+    color: var(--primary-color);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px var(--primary-glow);
+    margin-bottom: 1.5rem;
+}
+
+/* Sidebar */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 260px;
+    height: 100vh;
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--border-color);
+    box-shadow: 5px 0 20px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    overflow-y: auto;
+    backdrop-filter: blur(10px);
+}
+
+.sidebar-heading {
+    color: var(--primary-color);
+    font-family: var(--font-heading);
+    padding: 2rem 1.5rem;
+    font-size: 1.6rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+    background: linear-gradient(180deg, rgba(0, 240, 255, 0.1) 0%, transparent 100%);
+    text-shadow: 0 0 10px var(--primary-glow);
+}
+
+.nav-link {
+    color: var(--text-secondary) !important;
+    padding: 1rem 1.5rem;
+    margin: 0.5rem 0.8rem;
+    border: 1px solid transparent;
+    border-radius: var(--border-radius);
+    transition: all 0.3s ease;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.nav-link:hover {
+    color: #fff !important;
+    background-color: rgba(0, 240, 255, 0.1);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 15px var(--primary-glow);
+    transform: translateX(5px);
+}
+
+.nav-link.active {
+    color: #000 !important;
+    background: var(--primary-color);
+    box-shadow: 0 0 20px var(--primary-glow);
+    border-color: var(--primary-color);
+    font-weight: 700;
+}
+
+.nav-link i {
+    margin-right: 12px;
+    font-size: 1.2rem;
+    width: 24px;
+    text-align: center;
+}
+
+/* Main Content */
+.main-content {
+    margin-left: 260px;
+    padding: 2.5rem;
+    width: calc(100% - 260px);
+    min-height: 100vh;
+}
+
+/* Cards */
+.card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+    opacity: 0.5;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0 30px rgba(0, 240, 255, 0.15);
+    border-color: var(--primary-color);
+}
+
+.card-header {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 1.5rem;
+    font-family: var(--font-heading);
+    color: var(--primary-color);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Forms */
+.form-label {
+    font-weight: 600;
+    color: var(--primary-color);
+    text-transform: uppercase;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+}
+
+.form-control,
+.form-select {
+    background-color: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: var(--border-radius);
+    padding: 0.8rem 1.2rem;
+    font-size: 1.1rem;
+    font-family: var(--font-body);
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: rgba(0, 0, 0, 0.5);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+    color: #fff;
+}
+
+/* Dropdown Options */
+select option {
+    background-color: var(--sidebar-bg);
+    color: var(--text-primary);
+}
+
+/* Buttons */
+.btn {
+    border-radius: var(--border-radius);
+    padding: 0.6rem 1.5rem;
+    font-family: var(--font-heading);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary {
+    background-color: transparent;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-color);
+    color: #000;
+    box-shadow: 0 0 25px var(--primary-glow);
+    transform: translateY(-2px);
+}
+
+.btn-danger {
+    background-color: transparent;
+    border: 1px solid #ff0055;
+    color: #ff0055;
+    box-shadow: 0 0 10px rgba(255, 0, 85, 0.2);
+}
+
+.btn-danger:hover {
+    background-color: #ff0055;
+    color: #fff;
+    box-shadow: 0 0 25px rgba(255, 0, 85, 0.6);
+}
+
+.btn-sm {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+}
+
+/* Tables */
+.table-custom {
+    width: 100%;
+    margin-bottom: 1rem;
+    vertical-align: middle;
+    border-collapse: separate;
+    border-spacing: 0 5px;
+}
+
+.table-custom thead th {
+    background-color: rgba(0, 240, 255, 0.1);
+    color: var(--primary-color);
+    font-family: var(--font-heading);
+    font-weight: 600;
+    text-transform: uppercase;
+    border: none;
+    padding: 1rem;
+    letter-spacing: 1px;
+}
+
+.table-custom tbody tr {
+    background-color: rgba(255, 255, 255, 0.02);
+    transition: all 0.2s ease;
+}
+
+.table-custom tbody td {
+    padding: 1rem;
+    border: none;
+    color: var(--text-primary);
+    border-top: 1px solid transparent;
+    border-bottom: 1px solid transparent;
+}
+
+.table-custom tbody tr:hover {
+    background-color: rgba(0, 240, 255, 0.05);
+    transform: scale(1.01);
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.1);
+}
+
+.table-custom tbody tr:hover td:first-child {
+    border-left: 2px solid var(--primary-color);
+}
+
+/* Badges */
+.badge {
+    padding: 0.5em 0.8em;
+    border-radius: 2px;
+    font-family: var(--font-heading);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.badge.bg-primary {
+    background-color: transparent !important;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    box-shadow: 0 0 5px var(--primary-glow);
+}
+
+.badge.bg-success {
+    background-color: transparent !important;
+    border: 1px solid #0f0;
+    color: #0f0;
+    box-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+}
+
+/* Alerts */
+.alert {
+    background-color: rgba(16, 20, 30, 0.9);
+    border: 1px solid var(--primary-color);
+    color: var(--text-primary);
+    border-radius: var(--border-radius);
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--background-color);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-color);
+}

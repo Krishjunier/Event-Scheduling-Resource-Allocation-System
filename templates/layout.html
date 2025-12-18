@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Scheduler</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts: Orbitron & Rajdhani -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&family=Rajdhani:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+
+<body>
+
+    <body>
+        <div class="container-fluid p-0">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="sidebar-heading text-center">
+                    <i class="bi bi-calendar-check me-2"></i> Scheduler
+                </div>
+                <nav class="nav flex-column mt-3">
+                    <a class="nav-link {% if page == 'dashboard' %}active{% endif %}" href="/">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                    <a class="nav-link {% if page == 'resources' %}active{% endif %}" href="/resources">
+                        <i class="bi bi-box-seam"></i> Resources
+                    </a>
+                    <a class="nav-link {% if page == 'events' %}active{% endif %}" href="/events">
+                        <i class="bi bi-calendar-event"></i> Events
+                    </a>
+                    <a class="nav-link {% if page == 'allocations' %}active{% endif %}" href="/allocations">
+                        <i class="bi bi-arrows-angle-contract"></i> Allocations
+                    </a>
+                    <a class="nav-link {% if page == 'reports' %}active{% endif %}" href="/reports">
+                        <i class="bi bi-graph-up"></i> Reports
+                    </a>
+
+                </nav>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+
+        <!-- Bootstrap JS Bundle -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+
+
+            // Auto-dismiss alerts after 5 seconds
+            setTimeout(function () {
+                var alertList = document.querySelectorAll('.alert');
+                alertList.forEach(function (alert) {
+                    var bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                });
+            }, 5000);
+        </script>
+        {% block scripts %}{% endblock %}
+    </body>
+
+</html>

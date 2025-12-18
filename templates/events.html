@@ -1,0 +1,327 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row mb-4 animate-fade-in">
+    <div class="col-12">
+        <h2 class="section-title"><i class="bi bi-calendar-event me-2 text-primary"></i>Event Management</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-plus-circle me-2"></i> Create New Event
+            </div>
+            <div class="card-body">
+                <form id="event-form">
+                    <div class="mb-3">
+                        <label class="form-label">Event Title</label>
+                        <input type="text" class="form-control" name="title" required
+                            placeholder="e.g. Python Workshop">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="3"
+                            placeholder="Brief details..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Start Time</label>
+                        <input type="datetime-local" class="form-control" name="start_time" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">End Time</label>
+                        <input type="datetime-local" class="form-control" name="end_time" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-calendar-plus me-2"></i> Schedule Event
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-calendar3 me-2"></i> Upcoming Events</span>
+                <div class="input-group input-group-sm" style="width: 200px;">
+                    <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+                    <input type="text" id="event-search" class="form-control" placeholder="Search...">
+                </div>
+            </div>
+            <div class="card-body p-0 d-flex flex-column">
+                <div class="table-responsive flex-grow-1">
+                    <table class="table table-custom table-hover align-middle mb-0" id="event-table">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">Event Details</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th class="text-end pe-4 text-nowrap">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- Pagination Controls -->
+                <div class="p-3 border-top bg-light d-flex justify-content-between align-items-center"
+                    id="pagination-container">
+                    <!-- Injected by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Event Modal -->
+<div class="modal fade" id="editEventModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Event</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-event-form">
+                    <input type="hidden" name="id" id="edit-event-id">
+                    <div class="mb-3">
+                        <label class="form-label">Event Title</label>
+                        <input type="text" class="form-control" name="title" id="edit-event-title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" id="edit-event-description"
+                            rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Start Time</label>
+                        <input type="datetime-local" class="form-control" name="start_time" id="edit-event-start"
+                            required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">End Time</label>
+                        <input type="datetime-local" class="form-control" name="end_time" id="edit-event-end" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/main.js"></script>
+<script>
+    let editModal;
+    let currentPage = 1;
+    let currentSearch = '';
+    const PER_PAGE = 10;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        editModal = new bootstrap.Modal(document.getElementById('editEventModal'));
+
+        // Search Debounce
+        let timeout = null;
+        document.getElementById('event-search').addEventListener('input', (e) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                currentSearch = e.target.value;
+                currentPage = 1;
+                loadEvents(currentPage, currentSearch);
+            }, 300);
+        });
+    });
+
+    async function loadEvents(page = 1, query = '') {
+        const tbody = document.querySelector('#event-table tbody');
+        const paginationContainer = document.getElementById('pagination-container');
+
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center p-3">Loading...</td></tr>';
+        try {
+            const data = await apiCall(`/events?page=${page}&per_page=${PER_PAGE}&q=${encodeURIComponent(query)}`);
+
+            // Handle if data is array (backwards compatibility or error) vs object
+            const events = data.items || [];
+            const totalPages = data.pages || 1;
+
+            if (events.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center p-3 text-muted">No events scheduled.</td></tr>';
+                if (paginationContainer) paginationContainer.innerHTML = '';
+                return;
+            }
+            tbody.innerHTML = events.map(e => `
+                <tr>
+                    <td class="ps-4">
+                        <strong class="text-primary">${e.title}</strong><br>
+                        <small class="text-muted">${e.description || ''}</small>
+                    </td>
+                    <td>${new Date(e.start_time).toLocaleString()}</td>
+                    <td>${new Date(e.end_time).toLocaleString()}</td>
+                    <td class="text-end pe-4 text-nowrap table-actions">
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="openEdit(${e.id}, '${e.title}', '${e.description || ''}', '${e.start_time}', '${e.end_time}')">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteEvent(${e.id})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Render Pagination
+            if (paginationContainer) {
+                if (totalPages > 1) {
+                    renderPagination(data.current_page, totalPages);
+                } else {
+                    paginationContainer.innerHTML = ''; // Hide if single page
+                }
+            }
+
+        } catch (e) {
+            tbody.innerHTML = `<tr><td colspan="4" class="text-danger p-3">${e.message}</td></tr>`;
+        }
+    }
+
+    function renderPagination(current, total) {
+        const container = document.getElementById('pagination-container');
+
+        let paginationHTML = `
+            <small class="text-muted">Page ${current} of ${total}</small>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item ${current === 1 ? 'disabled' : ''}">
+                        <button class="page-link" type="button" onclick="changePage(${current - 1})">Previous</button>
+                    </li>
+        `;
+
+        // Simple Pagination Logic
+        for (let i = 1; i <= total; i++) {
+            if (i === 1 || i === total || (i >= current - 1 && i <= current + 1)) {
+                paginationHTML += `
+                    <li class="page-item ${i === current ? 'active' : ''}">
+                        <button class="page-link" type="button" onclick="changePage(${i})">${i}</button>
+                    </li>
+                 `;
+            } else if (i === current - 2 || i === current + 2) {
+                paginationHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+            }
+        }
+
+        paginationHTML += `
+                    <li class="page-item ${current === total ? 'disabled' : ''}">
+                        <button class="page-link" type="button" onclick="changePage(${current + 1})">Next</button>
+                    </li>
+                </ul>
+            </nav>
+        `;
+
+        container.innerHTML = paginationHTML;
+    }
+
+    window.changePage = (page) => {
+        currentPage = page;
+        loadEvents(currentPage, currentSearch);
+    };
+
+    function validateEvent(startStr, endStr) {
+        if (!startStr || !endStr) return "Start and End times are required.";
+
+        const start = new Date(startStr);
+        const end = new Date(endStr);
+
+        if (start.getTime() === end.getTime()) {
+            return "Start time and End time cannot be the same.";
+        }
+
+        if (start > end) {
+            return "Start time must be before end time.";
+        }
+
+        // Duration check: 30 mins (1800000 ms)
+        if ((end - start) < 1800000) {
+            return "Event must be at least 30 minutes long.";
+        }
+
+        // Single day check
+        if (start.toDateString() !== end.toDateString()) {
+            return "Event must start and end on the same day.";
+        }
+
+        return null; // Valid
+    }
+
+    document.getElementById('event-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+
+        const error = validateEvent(data.start_time, data.end_time);
+        if (error) {
+            showAlert(error, 'danger');
+            return;
+        }
+
+        try {
+            await apiCall('/events', 'POST', data);
+            showAlert('Event created!');
+            e.target.reset();
+            loadEvents();
+        } catch (err) {
+            showAlert(err.message, 'danger');
+        }
+    });
+
+    // Edit Flow
+    window.openEdit = (id, title, desc, start, end) => {
+        document.getElementById('edit-event-id').value = id;
+        document.getElementById('edit-event-title').value = title;
+        document.getElementById('edit-event-description').value = desc;
+        // Format dates for datetime-local input (remove seconds if present)
+        document.getElementById('edit-event-start').value = start.slice(0, 16);
+        document.getElementById('edit-event-end').value = end.slice(0, 16);
+        editModal.show();
+    };
+
+    document.getElementById('edit-event-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-event-id').value;
+        const data = {
+            title: document.getElementById('edit-event-title').value,
+            description: document.getElementById('edit-event-description').value,
+            start_time: document.getElementById('edit-event-start').value,
+            end_time: document.getElementById('edit-event-end').value
+        };
+
+        const error = validateEvent(data.start_time, data.end_time);
+        if (error) {
+            showAlert(error, 'danger');
+            return;
+        }
+
+        try {
+            await apiCall(`/events/${id}`, 'PUT', data);
+            showAlert('Event updated successfully');
+            editModal.hide();
+            loadEvents();
+        } catch (err) {
+            showAlert(err.message, 'danger');
+        }
+    });
+
+    // Delete Flow
+    window.deleteEvent = async (id) => {
+        if (!confirm('Are you sure? This will delete the event and its allocations.')) return;
+        try {
+            await apiCall(`/events/${id}`, 'DELETE');
+            showAlert('Event deleted');
+            loadEvents();
+        } catch (err) {
+            showAlert(err.message, 'danger');
+        }
+    };
+
+    loadEvents();
+</script>
+{% endblock %}

@@ -1,0 +1,254 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row mb-4 animate-fade-in">
+    <div class="col-12">
+        <h2 class="section-title"><i class="bi bi-graph-up me-2 text-primary"></i>Utilization Reports</h2>
+    </div>
+</div>
+
+<div class="card mb-4 shadow-sm">
+    <div class="card-header">
+        <i class="bi bi-sliders me-2"></i> Report Configuration
+    </div>
+    <div class="card-body">
+        <form id="report-form" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label">Start Date</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                    <input type="datetime-local" class="form-control" name="start_date" required>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <label class="form-label">End Date</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-calendar-check"></i></span>
+                    <input type="datetime-local" class="form-control" name="end_date" required>
+                </div>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100 table-actions">
+                    <i class="bi bi-filter"></i>
+                </button>
+                <button type="button" class="btn btn-danger w-100 table-actions" onclick="downloadReport()"
+                    title="Download PDF">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card bg-transparent border-0 shadow-none">
+    <div class="card-header border rounded shadow-sm mb-3">
+        <i class="bi bi-bar-chart-line-fill me-2"></i> Comparison Analysis
+    </div>
+    <div class="card-body mb-4">
+        <canvas id="comparisonChart" style="max-height: 400px;"></canvas>
+    </div>
+
+    <div class="card-header border rounded shadow-sm mb-3">
+        <i class="bi bi-grid-fill me-2"></i> Report Results
+    </div>
+    <div class="card-body p-0">
+        <div id="report-grid" class="row g-4">
+            <!-- Cards will be injected here -->
+            <div class="col-12 text-center py-5 text-muted">
+                <i class="bi bi-bar-chart display-4 d-block mb-3"></i>
+                Select a date range to generate insights.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/static/js/main.js"></script>
+<script>
+    // Set Chart.js Defaults for Dark Theme
+    Chart.defaults.color = '#e0e6ed';
+    Chart.defaults.borderColor = 'rgba(0, 240, 255, 0.1)';
+
+    let comparisonChartInstance = null;
+
+    function downloadReport() {
+        const form = document.getElementById('report-form');
+        const start = form.start_date.value;
+        const end = form.end_date.value;
+
+        if (!start || !end) {
+            showAlert('Please select a date range first', 'warning');
+            return;
+        }
+
+        // Trigger PDF download
+        window.location.href = `/api/reports/export?start_date=${start}&end_date=${end}`;
+    }
+
+    async function fetchReport(start, end) {
+        const startIso = new Date(start).toISOString();
+        const endIso = new Date(end).toISOString();
+        const grid = document.getElementById('report-grid');
+
+        try {
+            const data = await apiCall(`/reports/utilization?start_date=${startIso}&end_date=${endIso}`);
+
+            if (data.length === 0) {
+                grid.innerHTML = '<div class="col-12 text-center py-5 text-muted">No utilization found for this period.</div>';
+                if (comparisonChartInstance) {
+                    comparisonChartInstance.destroy();
+                    comparisonChartInstance = null;
+                }
+                return;
+            }
+
+            // 1. Render Grid Cards (Existing Logic with CSS animation class)
+            grid.innerHTML = data.map((r, index) => {
+                const percentage = Math.round(Math.min(r.total_hours * 5, 100)); // Cap at 100% just for visual safely
+                // Add staggered animation delay
+                const delay = index * 100;
+                return `
+                <div class="col-md-6 col-lg-4 animate-fade-in" style="animation-delay: ${delay}ms">
+                    <div class="card h-100 shadow-sm border-0 hover-shadow transition-all">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title text-primary fw-bold mb-0">${r.resource_name}</h5>
+                                <span class="badge bg-light text-dark border">
+                                    <i class="bi bi-calendar-event me-1"></i> ${r.bookings} Bookings
+                                </span>
+                            </div>
+                            
+                            <div class="d-flex align-items-center mt-4">
+                                <div style="width: 80px; height: 80px; position: relative;" class="me-4 flex-shrink-0">
+                                    <svg viewBox="0 0 36 36" class="d-block w-100 h-100">
+                                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#f0f2f5" stroke-width="3" />
+                                        <path class="circle-progress" 
+                                              stroke-dasharray="${percentage}, 100" 
+                                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" 
+                                              fill="none" 
+                                              stroke="#4f46e5" 
+                                              stroke-width="3" 
+                                              stroke-linecap="round" />
+                                    </svg>
+                                    <div class="position-absolute top-50 start-50 translate-middle fw-bold text-primary fs-5">
+                                        ${percentage}%
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-muted small mb-1">Total Utilised</p>
+                                    <h3 class="mb-0 fw-bold">${r.total_hours.toFixed(1)} <span class="fs-6 text-muted fw-normal">Hours</span></h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
+
+            // 2. Render Comparison Chart (Chart.js)
+            renderComparisonChart(data);
+
+        } catch (err) {
+            showAlert(err.message, 'danger');
+            grid.innerHTML = `<div class="col-12 text-center text-danger py-5">Error loading report: ${err.message}</div>`;
+        }
+    }
+
+    function renderComparisonChart(data) {
+        const ctx = document.getElementById('comparisonChart').getContext('2d');
+
+        // Prepare Data
+        const labels = data.map(d => d.resource_name);
+        const hoursData = data.map(d => d.total_hours);
+        const bookingsData = data.map(d => d.bookings);
+
+        if (comparisonChartInstance) {
+            comparisonChartInstance.destroy();
+        }
+
+        comparisonChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Total Hours',
+                        data: hoursData,
+                        backgroundColor: 'rgba(0, 240, 255, 0.6)', // Cyan
+                        borderColor: '#00f0ff',
+                        borderWidth: 1,
+                        yAxisID: 'y',
+                    },
+                    {
+                        label: 'Bookings',
+                        data: bookingsData,
+                        backgroundColor: 'rgba(189, 0, 255, 0.6)', // Purple
+                        borderColor: '#bd00ff',
+                        borderWidth: 1,
+                        yAxisID: 'y1',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 2000,
+                    easing: 'easeOutQuart'
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: { display: true, text: 'Hours' }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                        title: { display: true, text: 'Count' }
+                    }
+                }
+            }
+        });
+    }
+
+    document.getElementById('report-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const start = e.target.start_date.value;
+        const end = e.target.end_date.value;
+        await fetchReport(start, end);
+    });
+
+    // Auto-load report on page load (Default: Next 30 days)
+    document.addEventListener('DOMContentLoaded', () => {
+        const now = new Date();
+        const nextMonth = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+        // Format for datetime-local input (YYYY-MM-DDTHH:mm)
+        const formatForInput = (date) => {
+            return date.toISOString().slice(0, 16);
+        };
+
+        const startVal = formatForInput(now);
+        const endVal = formatForInput(nextMonth);
+
+        // Set inputs
+        const form = document.getElementById('report-form');
+        form.start_date.value = startVal;
+        form.end_date.value = endVal;
+
+        // Generate initial report
+        fetchReport(startVal, endVal);
+    });
+</script>
+{% endblock %}

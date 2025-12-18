@@ -1,0 +1,90 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row justify-content-center animate-fade-in">
+    <div class="col-md-8 col-lg-6">
+        <div class="text-center mb-4">
+            <h2 class="section-title"><i class="bi bi-arrows-angle-contract me-2 text-primary"></i>Allocation Manager
+            </h2>
+            <p class="text-muted">Assign resources to scheduled events efficiently.</p>
+        </div>
+
+        <div class="card shadow-lg">
+            <div class="card-header bg-transparent border-0 pb-0">
+                <i class="bi bi-layers me-2"></i> New Allocation
+            </div>
+            <div class="card-body p-4">
+                <div class="alert alert-info border-0 bg-info-subtle text-info-emphasis mb-4">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    The system automatically checks for time conflicts between events and resources.
+                </div>
+
+                <form id="allocation-form">
+                    <div class="mb-4">
+                        <label class="form-label">Select Event</label>
+                        <select class="form-select form-select-lg" name="event_id" required id="event-select">
+                            <option value="">Loading events...</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Select Resource</label>
+                        <select class="form-select form-select-lg" name="resource_id" required id="resource-select">
+                            <option value="">Loading resources...</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 btn-lg">
+                        <i class="bi bi-check2-circle me-2"></i> Allocate Resource
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/main.js"></script>
+<script>
+    async function loadOptions() {
+        const [eventsData, resourcesData] = await Promise.all([
+            apiCall('/events?per_page=100&upcoming=true'),
+            apiCall('/resources?per_page=100')
+        ]);
+
+        const eventSelect = document.getElementById('event-select');
+        if (eventsData.items.length === 0) {
+            eventSelect.innerHTML = '<option value="">No upcoming events found</option>';
+        } else {
+            eventSelect.innerHTML = '<option value="">-- Choose Event --</option>' +
+                eventsData.items.map(e => `<option value="${e.id}">${e.title} (${new Date(e.start_time).toLocaleDateString()})</option>`).join('');
+        }
+
+        const resSelect = document.getElementById('resource-select');
+        if (resourcesData.items.length === 0) {
+            resSelect.innerHTML = '<option value="">No resources found</option>';
+        } else {
+            resSelect.innerHTML = '<option value="">-- Choose Resource --</option>' +
+                resourcesData.items.map(r => `<option value="${r.id}">${r.name} (${r.type.toUpperCase()})</option>`).join('');
+        }
+    }
+
+    document.getElementById('allocation-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = {
+            event_id: parseInt(document.getElementById('event-select').value),
+            resource_id: parseInt(document.getElementById('resource-select').value)
+        };
+
+        try {
+            await apiCall('/allocations', 'POST', data);
+            showAlert('Resource allocated successfully!', 'success');
+        } catch (err) {
+            showAlert('Conflict Detected: ' + err.message, 'danger');
+        }
+    });
+
+    loadOptions();
+</script>
+{% endblock %}

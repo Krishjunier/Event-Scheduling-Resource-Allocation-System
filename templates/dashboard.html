@@ -1,0 +1,243 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row align-items-center mb-5 animate-fade-in">
+    <div class="col-md-8">
+        <h1 class="display-5 fw-bold text-primary mb-0">Welcome Back!</h1>
+        <p class="lead text-muted">Here's what's happening in your scheduler today.</p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <span id="current-date" class="badge bg-primary fs-6 p-3 shadow-sm text-white"></span>
+    </div>
+</div>
+
+<div class="row g-4 mb-4" id="dashboard-stats">
+    <!-- Events Stats -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm hover-elevate">
+            <div class="card-body p-4 position-relative overflow-hidden">
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div>
+                        <h6 class="text-uppercase text-muted fw-bold mb-1">Total Events</h6>
+                        <h2 class="display-4 fw-bold mb-0 text-primary" id="event-count">...</h2>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-circle">
+                        <i class="bi bi-calendar-event fs-3 text-primary"></i>
+                    </div>
+                </div>
+                <a href="/events" class="stretched-link text-decoration-none fw-bold text-primary">
+                    Manage Schedule <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resources Stats -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm hover-elevate">
+            <div class="card-body p-4 position-relative overflow-hidden">
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div>
+                        <h6 class="text-uppercase text-muted fw-bold mb-1">Total Resources</h6>
+                        <h2 class="display-4 fw-bold mb-0 text-success" id="resource-count">...</h2>
+                    </div>
+                    <div class="bg-success bg-opacity-10 p-3 rounded-circle">
+                        <i class="bi bi-box-seam fs-3 text-success"></i>
+                    </div>
+                </div>
+                <a href="/resources" class="stretched-link text-decoration-none fw-bold text-success">
+                    View Inventory <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0">
+                <h5 class="fw-bold mb-0"><i class="bi bi-lightning-charge me-2 text-warning"></i>Quick Actions</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="d-grid gap-3">
+                    <a href="/allocations" class="btn btn-outline-primary btn-lg text-start">
+                        <i class="bi bi-plus-circle-dotted me-2"></i> New Allocation
+                    </a>
+                    <a href="/reports" class="btn btn-outline-secondary btn-lg text-start">
+                        <i class="bi bi-file-earmark-bar-graph me-2"></i> Generate Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart and Upcoming Events Grid -->
+<div class="row mb-4">
+    <!-- Resource Usage Chart -->
+    <div class="col-lg-7 mb-4 mb-lg-0">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0">
+                <h5 class="fw-bold mb-0"><i class="bi bi-pie-chart-fill me-2 text-primary"></i>Resource Usage by Type
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <div style="height: 300px;">
+                    <canvas id="usageChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Events -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm h-100">
+            <div
+                class="card-header bg-transparent border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0"><i class="bi bi-calendar-range me-2 text-info"></i>Upcoming Events</h5>
+                <a href="/events" class="btn btn-sm btn-link text-decoration-none">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive p-4">
+                    <table class="table table-hover align-middle mb-0" id="upcoming-events-table">
+                        <thead class="bg-light text-muted">
+                            <tr>
+                                <th class="border-0 ps-3">Event</th>
+                                <th class="border-0">Time</th>
+                                <th class="border-0 text-end pe-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-4">Loading events...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/main.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Set date
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', options);
+
+        try {
+            // Fetch stats, upcoming events, and usage data
+            const [eventsData, resourcesData, upcomingEventsData, usageData] = await Promise.all([
+                apiCall('/events?per_page=1'),
+                apiCall('/resources?per_page=1'),
+                apiCall('/events?upcoming=true&order=asc&per_page=5'),
+                apiCall('/reports/usage-by-type')
+            ]);
+
+            document.getElementById('event-count').textContent = eventsData.total;
+            document.getElementById('resource-count').textContent = resourcesData.total;
+
+            // Render Upcoming Events
+            const tbody = document.querySelector('#upcoming-events-table tbody');
+            const upcoming = upcomingEventsData.items;
+
+            if (upcoming.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">No upcoming events scheduled.</td></tr>';
+            } else {
+                tbody.innerHTML = upcoming.map(e => `
+                    <tr>
+                        <td class="ps-3 fw-bold text-truncate" style="max-width: 150px;">${e.title}</td>
+                        <td>${new Date(e.start_time).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}</td>
+                        <td class="text-end pe-3">
+                            <span class="badge bg-success bg-opacity-10 text-success">Scheduled</span>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            // Render Usage Chart
+            renderUsageChart(usageData);
+
+        } catch (e) {
+            console.error(e);
+            showAlert('Failed to load dashboard stats', 'danger');
+        }
+    });
+
+    function renderUsageChart(data) {
+        if (!data || data.length === 0) return;
+
+        const ctx = document.getElementById('usageChart').getContext('2d');
+        const labels = data.map(d => d.type.toUpperCase()); // Capitalize Labels
+        const values = data.map(d => d.hours);
+
+        // Set Defaults for this page
+        Chart.defaults.color = '#ffffff';
+        Chart.defaults.borderColor = 'rgba(0, 240, 255, 0.1)';
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: [
+                        'rgba(0, 240, 255, 0.8)',  // Cyan (Primary)
+                        'rgba(189, 0, 255, 0.8)',  // Purple (Secondary)
+                        'rgba(0, 255, 157, 0.8)',  // Green (Success)
+                        'rgba(255, 235, 59, 0.8)',  // Yellow (Warning)
+                        'rgba(255, 0, 85, 0.8)'    // Red (Danger)
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 10,
+                    hoverBorderColor: '#ffffff',
+                    hoverBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            usePointStyle: true,
+                            padding: 20,
+                            color: '#ffffff',
+                            font: {
+                                family: 'Rajdhani',
+                                size: 14,
+                                weight: '600'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(5, 5, 8, 0.9)',
+                        titleColor: '#00f0ff',
+                        bodyColor: '#ffffff',
+                        borderColor: '#00f0ff',
+                        borderWidth: 1,
+                        padding: 10,
+                        titleFont: { family: 'Orbitron' },
+                        bodyFont: { family: 'Rajdhani', size: 14 },
+                        callbacks: {
+                            label: function (context) {
+                                const value = context.raw;
+                                const total = context.chart._metasets[context.datasetIndex].total;
+                                const percentage = total > 0 ? Math.round((value / total) * 100) + '%' : '0%';
+                                return value + ' hrs (' + percentage + ')';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}
